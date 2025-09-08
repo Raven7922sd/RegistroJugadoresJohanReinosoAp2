@@ -9,6 +9,8 @@ interface PlayerRepository {
 
     suspend fun getPlayer(id:Int): Player?
 
+    suspend fun getAllPlayers(): List<Player>
+
     suspend fun upsert(player: Player):Int
 
     suspend fun delete(id:Int)
