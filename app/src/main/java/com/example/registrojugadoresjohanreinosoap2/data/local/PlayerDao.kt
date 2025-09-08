@@ -15,6 +15,9 @@ interface PlayerDao {
     @Query("SELECT*FROM jugadores WHERE Jugadorid=:id")
         suspend fun getById(id:Int): PlayerEntity?
 
+    @Query("SELECT*FROM jugadores WHERE Nombres LIKE '%' || :nombre || '%' ")
+        suspend fun getByName(nombre:String): List<PlayerEntity>
+
     @Upsert
     suspend fun upsert(player: PlayerEntity):Long
 
