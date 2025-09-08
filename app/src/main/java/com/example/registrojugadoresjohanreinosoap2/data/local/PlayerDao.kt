@@ -15,8 +15,8 @@ interface PlayerDao {
     @Query("SELECT*FROM jugadores WHERE Jugadorid=:id")
         suspend fun getById(id:Int): PlayerEntity?
 
-    @Query("SELECT*FROM jugadores WHERE Nombres LIKE '%' || :nombre || '%' ")
-        suspend fun getByName(nombre:String): List<PlayerEntity>
+    @Query("SELECT*FROM jugadores WHERE LOWER(Nombres) = LOWER(:nombre)")
+    suspend fun getByName(nombre: String): List<PlayerEntity>
 
     @Upsert
     suspend fun upsert(player: PlayerEntity):Long
@@ -26,4 +26,7 @@ interface PlayerDao {
 
     @Query("DELETE FROM jugadores WHERE Jugadorid=:id")
     suspend fun deleteById(id:Int)
+
+    @Query("SELECT * FROM jugadores")
+    suspend fun getAllPlayers(): List<PlayerEntity>
 }
