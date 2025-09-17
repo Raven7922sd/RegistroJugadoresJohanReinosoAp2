@@ -1,14 +1,31 @@
-package com.example.registrojugadoresjohanreinosoap2.presentation.list
+package com.example.registrojugadoresjohanreinosoap2.presentation.gamePresentation.list
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,15 +40,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.registrojugadoresjohanreinosoap2.domain.model.Player
+import com.example.registrojugadoresjohanreinosoap2.domain.model.Game
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerListScreen(
-    onNavigateToEdit: (Int) -> Unit,
-    onNavigateToCreate: () -> Unit,
+fun GameListScreen(
+    onNavigateGameEdit: (Int) -> Unit,
+    onNavigateGameCreate: () -> Unit,
     onOpenDrawer: () -> Unit,
-    viewModel: ListPlayerViewModel = hiltViewModel()
+    viewModel: ListGameViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -40,7 +57,7 @@ fun PlayerListScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Lista de Jugadores",
+                        text = "Lista de Partidas",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -55,24 +72,24 @@ fun PlayerListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF7E57C2
-
-                    )
+                    containerColor = Color(0xFF7E57C2)
                 )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { onNavigateToCreate() }) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir jugador")
+            FloatingActionButton(onClick = { onNavigateGameCreate() }) {
+                Icon(Icons.Default.Add, contentDescription = "Añadir partida")
             }
         }
+
+
     ) { paddingValues ->
-        PlayerListContent(
+        GameListContent(
             state = state,
             onEvent = { event ->
                 when (event) {
-                    is ListPlayerUiEvent.Edit -> onNavigateToEdit(event.id)
-                    is ListPlayerUiEvent.Delete -> viewModel.onEvent(event)
+                    is ListGameUiEvent.Edit -> onNavigateGameEdit(event.id)
+                    is ListGameUiEvent.Delete -> viewModel.onEvent(event)
                     else -> Unit
                 }
             },
@@ -82,12 +99,12 @@ fun PlayerListScreen(
 }
 
 @Composable
-private fun PlayerListContent(
-    state: ListPlayerUiState,
-    onEvent: (ListPlayerUiEvent) -> Unit,
+private fun GameListContent(
+    state: ListGameUiState,
+    onEvent: (ListGameUiEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var playerToDelete by remember { mutableStateOf<Player?>(null) }
+    var gameToDelete by remember { mutableStateOf<Game?>(null) }
 
     Box(
         modifier = modifier
@@ -97,40 +114,38 @@ private fun PlayerListContent(
     ) {
         when {
             state.isLoading -> CircularProgressIndicator()
-            state.players.isEmpty() -> Text(
-                text = "No hay jugadores registrados",
+            state.games.isEmpty() -> Text(
+                text = "No hay partidas registradas",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = Color.Gray
             )
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(state.players, key = { it.Jugadorid }) { player ->
-                    PlayerCard(
-                        player = player,
-                        onClick = { onEvent(ListPlayerUiEvent.Edit(player.Jugadorid)) },
-                        onDelete = { playerToDelete = player }
-                    ) {
-
-                    }
+                items(state.games, key = { it.Gameid }) { game ->
+                    GameCard(
+                        game = game,
+                        onClick = { onEvent(ListGameUiEvent.Edit(game.Gameid)) },
+                        onDelete = { gameToDelete = game }
+                    )
                 }
             }
         }
 
-        if (playerToDelete != null) {
+        if (gameToDelete != null) {
             AlertDialog(
-                onDismissRequest = { playerToDelete = null },
-                title = { Text("Eliminar jugador") },
-                text = { Text("¿Estás seguro de eliminar a este jugador?") },
+                onDismissRequest = { gameToDelete = null },
+                title = { Text("Eliminar partida") },
+                text = { Text("¿Estás seguro de eliminar esta partida?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        onEvent(ListPlayerUiEvent.Delete(playerToDelete!!.Jugadorid))
-                        playerToDelete = null
+                        onEvent(ListGameUiEvent.Delete(gameToDelete!!.Gameid))
+                        gameToDelete = null
                     }) {
                         Text("Sí")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { playerToDelete = null }) {
+                    TextButton(onClick = { gameToDelete = null }) {
                         Text("No")
                     }
                 }
@@ -140,11 +155,10 @@ private fun PlayerListContent(
 }
 
 @Composable
-private fun PlayerCard(
-    player: Player,
+private fun GameCard(
+    game: Game,
     onClick: () -> Unit,
     onDelete: () -> Unit,
-    function: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -159,8 +173,11 @@ private fun PlayerCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Nombre: ${player.Nombres}")
-                Text("Partidas: ${player.Partidas}")
+                Text("Fecha: ${game.Fecha}")
+                Text(text = "Jugador 1: ${game.JugadorId1}")
+                Text(text = "Jugador 2: ${game.JugadorId2}")
+                Text(text = "Ganador: ${game.GanadorId}")
+                Text("Finalizada: ${if (game.EsFinalizada) "Sí" else "No"}")
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Borrar")
@@ -170,17 +187,11 @@ private fun PlayerCard(
 }
 
 @Composable
-@Preview(showBackground = true)
-private fun PlayerCardPreview() {
-
-    val state= ListPlayerUiState()
-        MaterialTheme {
-            PlayerCard(
-                player = Player(Jugadorid=1,Nombres="Johan Reinoso",Partidas=5),
-                onClick = { },
-                onDelete = { }
-            ) {
-
-            }
-        }
+@Preview
+private fun GameCardPreview() {
+    GameCard(
+        game = Game(1, "2023-10-10", 3, 4, 3, true),
+        onClick = {},
+        onDelete = {}
+    )
 }
