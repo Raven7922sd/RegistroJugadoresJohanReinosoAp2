@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,6 +30,7 @@ import com.example.registrojugadoresjohanreinosoap2.domain.model.Player
 fun PlayerListScreen(
     onNavigateToEdit: (Int) -> Unit,
     onNavigateToCreate: () -> Unit,
+    onOpenDrawer: () -> Unit,
     viewModel: ListPlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -41,6 +44,15 @@ fun PlayerListScreen(
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onOpenDrawer) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menú",
+                            tint = Color.White
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF7E57C2
@@ -97,7 +109,9 @@ private fun PlayerListContent(
                         player = player,
                         onClick = { onEvent(ListPlayerUiEvent.Edit(player.Jugadorid)) },
                         onDelete = { playerToDelete = player }
-                    )
+                    ) {
+
+                    }
                 }
             }
         }
@@ -130,6 +144,7 @@ private fun PlayerCard(
     player: Player,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    function: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -152,4 +167,20 @@ private fun PlayerCard(
             }
         }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+private fun PlayerCardPreview() {
+
+    val state= ListPlayerUiState()
+        MaterialTheme {
+            PlayerCard(
+                player = Player(Jugadorid=1,Nombres="Johan Reinoso",Partidas=5),
+                onClick = { },
+                onDelete = { }
+            ) {
+
+            }
+        }
 }
