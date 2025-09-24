@@ -5,7 +5,9 @@ class Game (
     val Fecha: String ="",
     val JugadorId1: Int,
     val JugadorId2: Int,
-    val GanadorId: Int,
-    val EsFinalizada: Boolean =false
+    val GanadorId: Int?=null,
+    val EsFinalizada: Boolean =false,
+    val tablero: String = "",
+    val jugadorActual: String = "X"
 ){
 }
