@@ -4,10 +4,13 @@ import android.content.Context
 import androidx.room.Room
 import com.example.registrojugadoresjohanreinosoap2.data.db.PlayerDb
 import com.example.registrojugadoresjohanreinosoap2.data.local.GameDao
+import com.example.registrojugadoresjohanreinosoap2.data.local.Logros.LogroDao
 import com.example.registrojugadoresjohanreinosoap2.data.local.PlayerDao
 import com.example.registrojugadoresjohanreinosoap2.data.repository.GameRepositoryImpl
 import com.example.registrojugadoresjohanreinosoap2.data.repository.PlayerRepositoryImpl
+import com.example.registrojugadoresjohanreinosoap2.data.repository.logroRepository.LogroRepositoryImpl
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.GameRepository
+import com.example.registrojugadoresjohanreinosoap2.domain.repository.LogrosRepository.LogroRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.PlayerRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.DeletePlayerUseCase
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.GetPlayerUseCase
@@ -122,4 +125,23 @@ object AppModule {
         return playerDb.GameDao()
     }
 
+
+    //Logro Use Cases
+    @Provides
+    @Singleton
+    fun provideLogroDao(playerDb: PlayerDb): LogroDao {
+        return playerDb.LogroDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLogroRepositoryImpl(logroDao: LogroDao): LogroRepositoryImpl {
+        return LogroRepositoryImpl(logroDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLogroRepository(impl: LogroRepositoryImpl): LogroRepository {
+        return impl
+    }
 }
