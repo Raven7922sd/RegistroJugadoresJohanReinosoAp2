@@ -3,7 +3,9 @@ package com.example.registrojugadoresjohanreinosoap2.presentation.gamePresentati
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.registrojugadoresjohanreinosoap2.domain.model.Game
+import com.example.registrojugadoresjohanreinosoap2.domain.model.Jugadores
 import com.example.registrojugadoresjohanreinosoap2.domain.model.Player // Asegúrate de que esta importación exista si la necesitas para 'jugadores'
+import com.example.registrojugadoresjohanreinosoap2.domain.repository.PlayerRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.DeleteGameUseCase
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.GetAllPlayersUseCase
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.GetGameUseCase
@@ -24,7 +26,8 @@ class EditGameViewModel @Inject constructor(
     private val upsertGameUseCase: UpsertGameCase,
     private val deleteGameUseCase: DeleteGameUseCase,
     private val validationGameUseCase: ValidationGameUseCase,
-    private val getAllPlayersUseCase: GetAllPlayersUseCase
+    private val getAllPlayersUseCase: GetAllPlayersUseCase,
+    private val playerRepository: PlayerRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(EditGameUiState())
     val state: StateFlow<EditGameUiState> = _state.asStateFlow()
@@ -33,10 +36,10 @@ class EditGameViewModel @Inject constructor(
         when (event) {
             is EditGameUiEvent.Load -> onLoad(event.id)
             is EditGameUiEvent.FechaChanged -> onFechaChanged(event.value)
-            is EditGameUiEvent.JugadorId1Changed -> onJugadorId1Changed(event.value)
-            is EditGameUiEvent.JugadorId2Changed -> onJugadorId2Changed(event.value)
-            is EditGameUiEvent.GanadorIdChanged -> onGanadorIdChanged(event.value)
-            is EditGameUiEvent.EsFinalizadaChanged -> onEsFinalizadaChanged(event.value)
+            is EditGameUiEvent.JugadorId1Changed -> onJugador1Changed(event.value)
+            is EditGameUiEvent.JugadorId2Changed -> onJugador2Changed(event.value)
+            is EditGameUiEvent.GanadorIdChanged -> onGanadorChanged(event.value)
+            is EditGameUiEvent.EsFinalizadaChanged -> onFinalizadaChanged(event.value)
             EditGameUiEvent.Save -> onSave()
             EditGameUiEvent.Delete -> onDelete()
         }
@@ -45,7 +48,7 @@ class EditGameViewModel @Inject constructor(
     private fun loadJugadores() {
         viewModelScope.launch {
             val jugadores = getAllPlayersUseCase()
-            _state.update { it.copy(jugadores = jugadores) }
+            _state.update { it.copy(jugadoresDisponibles = jugadores) }
         }
     }
 
@@ -65,7 +68,7 @@ class EditGameViewModel @Inject constructor(
                         fecha = game.Fecha,
                         jugadorId1 = game.JugadorId1,
                         jugadorId2 = game.JugadorId2,
-                        ganadorId = game.GanadorId,
+                        ganadorId = game.GanadorId?: 0,
                         esFinalizada = game.EsFinalizada,
                     )
                 }
@@ -74,98 +77,92 @@ class EditGameViewModel @Inject constructor(
         }
     }
 
-    private fun onFechaChanged(fecha: String) {
+    private fun onJugador1Changed(jugadorId: Int){
+        viewModelScope.launch {
+            val jugador = playerRepository.getPlayer(jugadorId)
+            _state.update {
+                it.copy(
+                    jugadorId1 = jugadorId,
+                    jugadorId1error = null
+                )
+            }
+        }
+    }
+
+    private fun onJugador2Changed(jugadorId: Int){
+        viewModelScope.launch {
+            val jugador = playerRepository.getPlayer(jugadorId)
+            _state.update {
+                it.copy(
+                    jugadorId2 = jugadorId,
+                    jugadorId2error = null
+                )
+            }
+        }
+    }
+
+    private fun onFechaChanged(fecha: String){
         _state.update {
             it.copy(
                 fecha = fecha,
-                fechaError = if (fecha.isBlank()) "La fecha es requerida" else null
+                fechaError = if(fecha.isBlank()) "Fecha requerida" else null
             )
         }
     }
 
-    private fun onJugadorId1Changed(jugadorId: Int) {
-        _state.update {
-            it.copy(
-                jugadorId1 = jugadorId,
-                jugadorId1error = if (jugadorId == 0) "Jugador 1 requerido" else null
-            )
-        }
-    }
-
-    private fun onJugadorId2Changed(jugadorId: Int) {
-        _state.update {
-            it.copy(
-                jugadorId2 = jugadorId,
-                jugadorId2error = if (jugadorId == 0) "Jugador 2 requerido" else null
-            )
-        }
-    }
-
-    private fun onGanadorIdChanged(ganadorId: Int?) {
-        _state.update {
-            it.copy(
-                ganadorId = ganadorId ?: 0,
-                ganadorIderror = null
-            )
-        }
-    }
-
-    private fun onEsFinalizadaChanged(esFinalizada: Boolean) {
-        _state.update { it.copy(esFinalizada = esFinalizada) }
-    }
-
-    private fun onSave() {
+    private fun onGanadorChanged(ganadorId: Int?){
         viewModelScope.launch {
-            val currentState = _state.value
-            var isValid = true
+            _state.update {
+                it.copy(
+                    ganadorId = ganadorId
+                )
+            }
+        }
+    }
 
-            if (currentState.fecha.isBlank()) {
-                _state.update { it.copy(fechaError = "La fecha es requerida") }
-                isValid = false
-            }
-            if (currentState.jugadorId1 == 0) {
-                _state.update { it.copy(jugadorId1error = "Jugador 1 requerido") }
-                isValid = false
-            }
-            if (currentState.jugadorId2 == 0) {
-                _state.update { it.copy(jugadorId2error = "Jugador 2 requerido") }
-                isValid = false
-            }
-            if (currentState.jugadorId1 != 0 && currentState.jugadorId1 == currentState.jugadorId2) {
-                _state.update { it.copy(jugadorId1error = "Los jugadores deben ser diferentes", jugadorId2error = "Los jugadores deben ser diferentes") }
-                isValid = false
-            }
-            if (currentState.esFinalizada && currentState.ganadorId != 0 &&
-                currentState.ganadorId != currentState.jugadorId1 && currentState.ganadorId != currentState.jugadorId2) {
-                _state.update { it.copy(ganadorIderror = "El ganador debe ser uno de los jugadores") }
-                isValid = false
-            }
+    private fun onFinalizadaChanged(finalizada: Boolean){
+        _state.update { it.copy(esFinalizada = finalizada) }
+    }
 
-            if (!isValid) {
-                _state.update { it.copy(isSaving = false) }
+    private fun onSave(){
+        viewModelScope.launch {
+            if(_state.value.fecha.isBlank()){
+                _state.update { it.copy(fechaError = "Fecha requerida") }
                 return@launch
             }
-
-
+            if(_state.value.jugadorId1 == 0){
+                _state.update { it.copy(jugadorId1error = "Jugador 1 requerido") }
+                return@launch
+            }
+            if(_state.value.jugadorId2 == 0){
+                _state.update { it.copy(jugadorId2error = "Jugador 2 requerido") }
+                return@launch
+            }
+            if(_state.value.jugadorId1 == _state.value.jugadorId2){
+                _state.update { it.copy(jugadorId1error = "Jugadores no pueden ser iguales", jugadorId2error = "Jugadores no pueden ser iguales") }
+                return@launch
+            }
             _state.update { it.copy(isSaving = true) }
-            try {
-                val game = Game(
-                    Gameid = currentState.id ?: 0,
-                    Fecha = currentState.fecha,
-                    JugadorId1 = currentState.jugadorId1,
-                    JugadorId2 = currentState.jugadorId2,
-                    GanadorId = currentState.ganadorId,
-                    EsFinalizada = currentState.esFinalizada
+
+            try{
+                val partida = Game(
+                    Gameid = _state.value.id ?: 0,
+                    Fecha = _state.value.fecha,
+                    JugadorId1 = _state.value.jugadorId1,
+                    JugadorId2 = _state.value.jugadorId2,
+                    GanadorId = _state.value.ganadorId,
+                    EsFinalizada = _state.value.esFinalizada
                 )
 
-                upsertGameUseCase(game)
+                upsertGameUseCase(partida)
+
                 _state.update {
                     it.copy(
                         isSaving = false,
-                        isGameSaved = true
-                    )
+                        isGameSaved = true)
                 }
-            } catch (e: Exception) {
+
+            }catch (e: Exception){
                 _state.update {
                     it.copy(
                         isSaving = false,
@@ -175,15 +172,15 @@ class EditGameViewModel @Inject constructor(
             }
         }
     }
+    private fun onDelete(){
+        val id = _state.value.id?: return
 
-    private fun onDelete() {
-        val gameId = _state.value.id ?: return
         viewModelScope.launch {
             _state.update { it.copy(isDeleting = true) }
             try {
-                deleteGameUseCase(gameId)
+                deleteGameUseCase(id)
                 _state.update { it.copy(isDeleting = false, isGameDeleted = true) }
-            } catch (e: Exception) {
+            }catch (e: Exception){
                 _state.update {
                     it.copy(
                         isDeleting = false,
@@ -191,6 +188,13 @@ class EditGameViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun loadJugadoresDisponibles(){
+        viewModelScope.launch {
+            val jugadores = playerRepository.getAllPlayers()
+            _state.update { it.copy(jugadoresDisponibles = jugadores) }
         }
     }
 }
