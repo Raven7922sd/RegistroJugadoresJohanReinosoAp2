@@ -1,4 +1,4 @@
-package com.example.registrojugadoresjohanreinosoap2.presentation.list
+package com.example.registrojugadoresjohanreinosoap2.presentation.Players.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,37 +36,20 @@ fun PlayerListScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Lista de Jugadores",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onOpenDrawer) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "Menú",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF7E57C2
 
-                    )
-                )
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(onClick = { onNavigateToCreate() }) {
                 Icon(Icons.Default.Add, contentDescription = "Añadir jugador")
             }
         }
     ) { paddingValues ->
+
+            Text(
+                "Lista de Jugadores",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+
         PlayerListContent(
             state = state,
             onEvent = { event ->
@@ -172,15 +155,11 @@ private fun PlayerCard(
 @Composable
 @Preview(showBackground = true)
 private fun PlayerCardPreview() {
+    PlayerCard(
+        player = Player(Jugadorid = 1, Nombres = "Jugador 1", Partidas = 5),
+        onClick = {},
+        onDelete = {}
+    ) {
 
-    val state= ListPlayerUiState()
-        MaterialTheme {
-            PlayerCard(
-                player = Player(Jugadorid=1,Nombres="Johan Reinoso",Partidas=5),
-                onClick = { },
-                onDelete = { }
-            ) {
-
-            }
-        }
+    }
 }
