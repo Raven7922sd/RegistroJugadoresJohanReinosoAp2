@@ -54,8 +54,8 @@ private fun EditGameBody(
             onDismissRequest = { showJugadorSelector = false },
             sheetState = sheetState
         ) {
-            JugadorSelectorBottomSheetContent(
-                jugadores = state.jugadores,
+            JugadorSelectorBottomSheet(
+                jugadores = state.jugadoresDisponibles,
                 onJugadorSelected = { jugador ->
                     when (selectorType) {
                         "jugador1" -> onEvent(EditGameUiEvent.JugadorId1Changed(jugador.Jugadorid))
@@ -67,29 +67,12 @@ private fun EditGameBody(
         }
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = if (state.isNew) "Nueva Partida" else "Editar Partida",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF7E57C2)
-                )
-            )
-        }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .padding(16.dp)
-                .fillMaxSize()
         ) {
-
             OutlinedButton(
                 onClick = {
                     selectorType = "jugador1"
@@ -99,10 +82,16 @@ private fun EditGameBody(
             ) {
                 Text(
                     text = if (state.jugadorId1 == 0) "Seleccionar Jugador 1"
-                    else "Jugador 1: ${state.jugadores.find { it.Jugadorid == state.jugadorId1 }?.Nombres ?: "ID ${state.jugadorId1}"}"
+                    else "Jugador 1: ${state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId1 }?.Nombres ?: "ID ${state.jugadorId1}"}",
+                    modifier = Modifier.weight(1f)
                 )
             }
-            state.jugadorId1error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (state.jugadorId1error != null) {
+                Text(
+                    state.jugadorId1error,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -115,55 +104,67 @@ private fun EditGameBody(
             ) {
                 Text(
                     text = if (state.jugadorId2 == 0) "Seleccionar Jugador 2"
-                    else "Jugador 2: ${state.jugadores.find { it.Jugadorid == state.jugadorId2 }?.Nombres ?: "ID ${state.jugadorId2}"}"
+                    else "Jugador 2: ${state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId2 }?.Nombres ?: "ID ${state.jugadorId2}"}",
+                    modifier = Modifier.weight(1f)
                 )
             }
-            state.jugadorId2error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (state.jugadorId2error != null) {
+                Text(
+                    state.jugadorId2error,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = state.fecha,
                 onValueChange = { onEvent(EditGameUiEvent.FechaChanged(it)) },
-                label = { Text("Fecha de la Partida") },
+                label = { Text("Fecha") },
                 isError = state.fechaError != null,
                 modifier = Modifier.fillMaxWidth()
             )
-            state.fechaError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            if (state.fechaError != null) {
+                Text(
+                    state.fechaError,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            if (state.jugadorId1 != 0 && state.jugadorId2 != 0 && state.jugadorId1 != state.jugadorId2) {
-                val jugador1 = state.jugadores.find { it.Jugadorid == state.jugadorId1 }
-                val jugador2 = state.jugadores.find { it.Jugadorid == state.jugadorId2 }
+            if (state.jugadorId1 > 0 && state.jugadorId2 > 0) {
+                val jugador1 = state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId1 }
+                val jugador2 = state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId2 }
 
-                Text("Ganador:", style = MaterialTheme.typography.titleMedium)
+                Text("Ganador:", style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))
 
-                Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-                    jugador1?.let {
-                        FilterChip(
-                            selected = state.ganadorId == it.Jugadorid,
-                            onClick = { onEvent(EditGameUiEvent.GanadorIdChanged(it.Jugadorid)) },
-                            label = { Text(it.Nombres) }
-                        )
-                    }
-                    jugador2?.let {
-                        FilterChip(
-                            selected = state.ganadorId == it.Jugadorid,
-                            onClick = { onEvent(EditGameUiEvent.GanadorIdChanged(it.Jugadorid)) },
-                            label = { Text(it.Nombres) }
-                        )
-                    }
+                Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                     FilterChip(
-                        selected = state.ganadorId == 0,
+                        selected = state.ganadorId == state.jugadorId1,
+                        onClick = { onEvent(EditGameUiEvent.GanadorIdChanged(state.jugadorId1)) },
+                        label = { Text(jugador1?.Nombres ?: "Jugador 1") }
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    FilterChip(
+                        selected = state.ganadorId == state.jugadorId2,
+                        onClick = { onEvent(EditGameUiEvent.GanadorIdChanged(state.jugadorId2)) },
+                        label = { Text(jugador2?.Nombres ?: "Jugador 2") }
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    FilterChip(
+                        selected = state.ganadorId == null,
                         onClick = { onEvent(EditGameUiEvent.GanadorIdChanged(null)) },
                         label = { Text("Empate") }
                     )
                 }
+                Spacer(Modifier.height(16.dp))
             }
-
-            Spacer(Modifier.height(16.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(
@@ -181,9 +182,7 @@ private fun EditGameBody(
                     onClick = { onEvent(EditGameUiEvent.Save) },
                     enabled = !state.isSaving,
                     modifier = Modifier.weight(1f)
-                ) {
-                    Text("Guardar")
-                }
+                ) { Text("Guardar") }
 
                 Spacer(Modifier.width(8.dp))
 
@@ -192,9 +191,7 @@ private fun EditGameBody(
                         onClick = { onEvent(EditGameUiEvent.Delete) },
                         enabled = !state.isDeleting,
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Eliminar")
-                    }
+                    ) { Text("Eliminar") }
                 }
             }
         }
@@ -202,7 +199,7 @@ private fun EditGameBody(
 }
 
 @Composable
-fun JugadorSelectorBottomSheetContent(
+fun JugadorSelectorBottomSheet(
     jugadores: List<Player>,
     onJugadorSelected: (Player) -> Unit
 ) {
@@ -211,47 +208,29 @@ fun JugadorSelectorBottomSheetContent(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        Text("Seleccionar Jugador", style = MaterialTheme.typography.headlineSmall)
+        Text("Seleccione un Jugador", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
 
-        if (jugadores.isEmpty()) {
-            Text("No hay jugadores disponibles")
-        } else {
-            LazyColumn {
-                items(jugadores, key = { it.Jugadorid }) { jugador ->
-                    Button(
-                        onClick = { onJugadorSelected(jugador) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Text(jugador.Nombres)
-                    }
+        LazyColumn {
+            items(jugadores) { jugador ->
+                Button(
+                    onClick = { onJugadorSelected(jugador) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    Text(jugador.Nombres)
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun EditGameScreenPreview() {
+private fun EditPartidaBodyPreview() {
+    val state = EditGameUiState()
     MaterialTheme {
-        val samplePlayers = listOf(
-            Player(Jugadorid = 1, Nombres = "Jugador 1", Partidas = 5),
-            Player(Jugadorid = 2, Nombres = "Jugador 2", Partidas = 3)
-        )
-
-        val sampleState = EditGameUiState(
-            id = 1,
-            fecha = "2023-10-01",
-            jugadorId1 = 1,
-            jugadorId2 = 2,
-            ganadorId = 1,
-            isNew = false,
-            esFinalizada = true,
-            jugadores = samplePlayers
-        )
-        EditGameBody(state = sampleState, onEvent = {})
+        EditGameBody(state = state) { _ -> }
     }
 }
