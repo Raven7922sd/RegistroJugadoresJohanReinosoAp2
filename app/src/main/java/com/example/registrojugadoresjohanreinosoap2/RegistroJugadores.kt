@@ -5,3 +5,5 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class RegistroJugadores : Application()
+class RegistroPartidas : Application()
+

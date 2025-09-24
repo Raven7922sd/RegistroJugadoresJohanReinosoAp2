@@ -1,4 +1,4 @@
-package com.example.registrojugadoresjohanreinosoap2.presentation.list
+package com.example.registrojugadoresjohanreinosoap2.presentation.Players.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,33 +30,26 @@ import com.example.registrojugadoresjohanreinosoap2.domain.model.Player
 fun PlayerListScreen(
     onNavigateToEdit: (Int) -> Unit,
     onNavigateToCreate: () -> Unit,
+    onOpenDrawer: () -> Unit,
     viewModel: ListPlayerViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Lista de Jugadores",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF7E57C2
 
-                    )
-                )
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(onClick = { onNavigateToCreate() }) {
                 Icon(Icons.Default.Add, contentDescription = "Añadir jugador")
             }
         }
     ) { paddingValues ->
+
+            Text(
+                "Lista de Jugadores",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+
         PlayerListContent(
             state = state,
             onEvent = { event ->
@@ -97,7 +92,9 @@ private fun PlayerListContent(
                         player = player,
                         onClick = { onEvent(ListPlayerUiEvent.Edit(player.Jugadorid)) },
                         onDelete = { playerToDelete = player }
-                    )
+                    ) {
+
+                    }
                 }
             }
         }
@@ -130,6 +127,7 @@ private fun PlayerCard(
     player: Player,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    function: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -151,5 +149,17 @@ private fun PlayerCard(
                 Icon(Icons.Default.Delete, contentDescription = "Borrar")
             }
         }
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+private fun PlayerCardPreview() {
+    PlayerCard(
+        player = Player(Jugadorid = 1, Nombres = "Jugador 1", Partidas = 5),
+        onClick = {},
+        onDelete = {}
+    ) {
+
     }
 }
