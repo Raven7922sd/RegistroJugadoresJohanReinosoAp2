@@ -1,4 +1,4 @@
-package com.example.registrojugadoresjohanreinosoap2.presentation.edit
+package com.example.registrojugadoresjohanreinosoap2.presentation.Players.edit
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
