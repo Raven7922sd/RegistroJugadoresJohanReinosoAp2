@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,14 +31,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.registrojugadoresjohanreinosoap2.presentation.Players.edit.EditPlayerScreen
 import com.example.registrojugadoresjohanreinosoap2.presentation.gamePresentation.edit.EditGameScreen
 import com.example.registrojugadoresjohanreinosoap2.presentation.gamePresentation.list.GameListScreen
 import com.example.registrojugadoresjohanreinosoap2.presentation.Players.list.ListPlayerViewModel
 import com.example.registrojugadoresjohanreinosoap2.presentation.Players.list.PlayerListScreen
+import com.example.registrojugadoresjohanreinosoap2.presentation.apiPresentation.ApiGameScreen
+import com.example.registrojugadoresjohanreinosoap2.presentation.apiPresentation.list.ListPartidaApiScreen
 import com.example.registrojugadoresjohanreinosoap2.presentation.gamePresentation.GameScreen
 import com.example.registrojugadoresjohanreinosoap2.ui.theme.RegistroJugadoresJohanReinosoAp2Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -112,6 +117,17 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
                                 }
+                                item {
+                                    DrawerMenuItem(
+                                        icon = Icons.Filled.Wifi,
+                                        title = "Partidas API",
+                                        isSelected = navController.currentDestination?.route == "apiPartidaList",
+                                        onClick = {
+                                            navController.navigate("apiPartidaList")
+                                            scope.launch { drawerState.close() }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -181,14 +197,15 @@ class MainActivity : ComponentActivity() {
                                             navController.navigate("playerList")
                                         },
                                         onNavigateToGame = {
-                                            navController.navigate("gameScreen")
+                                            navController.navigate("tictactoeGame")
                                         },
-                                        onContinueGame = { GameId ->
-                                            navController.navigate("gameScreen/$GameId")
+                                        onContinueGame = { gameId ->
+                                            navController.navigate("localGameScreen/$gameId")
                                         },
                                         onOpenDrawer = {
                                             scope.launch { drawerState.open() }
-                                        })
+                                        }
+                                    )
                                 }
 
                                 composable("tictactoeGame") {
@@ -196,7 +213,6 @@ class MainActivity : ComponentActivity() {
                                         viewModel = hiltViewModel()
                                     )
                                 }
-
 
                                 composable("editGame/{id}") { backStackEntry ->
                                     val id = backStackEntry.arguments?.getString("id")
@@ -207,11 +223,15 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-
-                                composable("gameScreen/{partidaId}") { backStackEntry ->
-                                    val partidaId = backStackEntry.arguments?.getString("partidaId")?.toIntOrNull()
+                                composable(
+                                    route = "localGameScreen/{gameId}",
+                                    arguments = listOf(navArgument("gameId") {
+                                        type = NavType.IntType
+                                    })
+                                ) { backStackEntry ->
+                                    val gameId = backStackEntry.arguments?.getInt("gameId")
                                     GameScreen(
-                                        partidaId = partidaId
+                                        viewModel = hiltViewModel()
                                     )
                                 }
 
@@ -232,6 +252,37 @@ class MainActivity : ComponentActivity() {
                                         logroId = logroId,
                                         onSaveComplete = { navController.popBackStack() },
                                         onDeleteComplete = { navController.popBackStack() }
+                                    )
+                                }
+
+                                composable("apiPartidaList") {
+                                    ListPartidaApiScreen(
+                                        onNavigateToCreate = {
+                                            navController.navigate("apiGameScreen")
+                                        },
+                                        onNavigateToGame = { partidaId ->
+                                            navController.navigate("apiGameScreen/$partidaId")
+                                        }
+                                    )
+                                }
+
+                                composable("apiGameScreen") {
+                                    ApiGameScreen(
+                                        partidaId = null,
+                                        onNavigateBack = { navController.popBackStack() }
+                                    )
+                                }
+
+                                composable(
+                                    route = "apiGameScreen/{partidaId}",
+                                    arguments = listOf(navArgument("partidaId") {
+                                        type = NavType.IntType
+                                    })
+                                ) { backStackEntry ->
+                                    val partidaId = backStackEntry.arguments?.getInt("partidaId")
+                                    ApiGameScreen(
+                                        partidaId = partidaId,
+                                        onNavigateBack = { navController.popBackStack() }
                                     )
                                 }
                             }
@@ -272,13 +323,11 @@ private fun DrawerHeader() {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Gestión de Juegos",
+                text = "Gestión de opciones",
                 color = Color.White.copy(alpha = 0.8f),
                 style = MaterialTheme.typography.bodySmall
             )
         }
-
-
     }
 }
 
