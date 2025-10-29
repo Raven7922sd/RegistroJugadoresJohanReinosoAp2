@@ -1,3 +1,4 @@
+
 package com.example.registrojugadoresjohanreinosoap2.data.module
 
 import android.content.Context
@@ -6,32 +7,20 @@ import com.example.registrojugadoresjohanreinosoap2.data.db.PlayerDb
 import com.example.registrojugadoresjohanreinosoap2.data.local.GameDao
 import com.example.registrojugadoresjohanreinosoap2.data.local.Logros.LogroDao
 import com.example.registrojugadoresjohanreinosoap2.data.local.PlayerDao
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.JugadorApi
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.MovimientosApi
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.PartidaApi
+import com.example.registrojugadoresjohanreinosoap2.data.remote.JugadorApi
+import com.example.registrojugadoresjohanreinosoap2.data.remote.MovimientosApi
+import com.example.registrojugadoresjohanreinosoap2.data.remote.PartidaApi
+import com.example.registrojugadoresjohanreinosoap2.data.remote.remoteDataSource.JugadorRemoteDataSource
 import com.example.registrojugadoresjohanreinosoap2.data.repository.GameRepositoryImpl
 import com.example.registrojugadoresjohanreinosoap2.data.repository.PlayerRepositoryImpl
-import com.example.registrojugadoresjohanreinosoap2.data.repository.apiRepository.ApiJugadoresRepositoryImpl
 import com.example.registrojugadoresjohanreinosoap2.data.repository.apiRepository.ApiMovimientoRepositoryImpl
 import com.example.registrojugadoresjohanreinosoap2.data.repository.apiRepository.ApiPartidaRepositoryImpl
 import com.example.registrojugadoresjohanreinosoap2.data.repository.logroRepository.LogroRepositoryImpl
-import com.example.registrojugadoresjohanreinosoap2.domain.model.Movimiento.Movimientos
-import com.example.registrojugadoresjohanreinosoap2.domain.repository.ApiRepository.JugadorApiRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.ApiRepository.MovimientoApiRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.ApiRepository.PartidaApiRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.GameRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.LogrosRepository.LogroRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.PlayerRepository
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.DeletePlayerUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.GetPlayerUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.ObservePlayersUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.UpsertPlayerUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.ValidationPlayerUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.DeleteGameUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.GetGameUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.ObserveGameUseCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.UpsertGameCase
-import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.ValidationGameUseCase
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -48,7 +37,24 @@ import javax.inject.Singleton
 @Module
 
 object AppModule {
+    @Provides
+    @Singleton
+    fun providePlayerDB(@ApplicationContext appContext: Context): PlayerDb {
+        return Room.databaseBuilder(
+            appContext,
+            PlayerDb::class.java,
+            "PlayerDb"
+        ).fallbackToDestructiveMigration(false)
+            .build()
+    }
+
     private const val BASE_URL = "https://gestionhuacalesapi.azurewebsites.net/"
+
+    @Provides
+    @Singleton
+    fun providePlayerDao(PlayerDb: PlayerDb): PlayerDao {
+        return PlayerDb.playerDao()
+    }
 
     @Provides
     @Singleton
@@ -57,6 +63,7 @@ object AppModule {
             .add(KotlinJsonAdapterFactory())
             .build()
     }
+
     @Provides
     @Singleton
     fun providePartidaApi(moshi: Moshi): PartidaApi {
@@ -95,121 +102,43 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideJugadorApiRepository(api: JugadorApi): JugadorApiRepository {
-        return ApiJugadoresRepositoryImpl(api)
-    }
-
-    @Provides
-    @Singleton
     fun provideMovimientoApiRepository(api: MovimientosApi): MovimientoApiRepository {
         return ApiMovimientoRepositoryImpl(api)
     }
-
-
-
     @Provides
     @Singleton
-    fun providePlayerDB(@ApplicationContext appContext: Context): PlayerDb {
-        return Room.databaseBuilder(
-            appContext,
-            PlayerDb::class.java,
-            "PlayerDb"
-        ).fallbackToDestructiveMigration(false)
-            .build()
+    fun providePartidaDao(playerDB: PlayerDb): GameDao {
+        return playerDB.GameDao()
     }
 
     @Provides
     @Singleton
-    fun providePlayerDao(playerDb: PlayerDb): PlayerDao {
-        return playerDb.playerDao()
+    fun provideLogroDao(playerDB: PlayerDb): LogroDao {
+        return playerDB.LogroDao()
     }
 
     @Provides
     @Singleton
-    fun providePlayerRepositoryImpl(playerDao: PlayerDao): PlayerRepositoryImpl {
-        return PlayerRepositoryImpl(playerDao)
+    fun providePlayerRepositoryImpl(playerDao: PlayerDao, remoteDataSource: JugadorRemoteDataSource): PlayerRepository {
+        return PlayerRepositoryImpl(playerDao, remoteDataSource)
     }
 
     @Provides
     @Singleton
-    fun providePlayerRepository(impl: PlayerRepositoryImpl): PlayerRepository {
-        return impl
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetPlayerUseCase(repo: PlayerRepository) = GetPlayerUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideUpsertPlayerUseCase(repo: PlayerRepository) = UpsertPlayerUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideDeletePlayerUseCase(repo: PlayerRepository) = DeletePlayerUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideObservePlayersUseCase(repo: PlayerRepository) = ObservePlayersUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideValidationPlayerUseCase(repo: PlayerRepository) = ValidationPlayerUseCase(repo)
-
-
-    // Game Use Cases
-
-    @Provides
-    @Singleton
-    fun provideUpsertGameUseCase(repo: GameRepository) = UpsertGameCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideObserveGameUseCase(repo: GameRepository) = ObserveGameUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideDeleteGameUseCase(repo: GameRepository) = DeleteGameUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideGetGameUseCase(repo: GameRepository) = GetGameUseCase(repo)
-
-    @Provides
-    @Singleton
-    fun provideValidationGameUseCase(repo: GameRepository) = ValidationGameUseCase(repo)
-
-
-    @Provides
-    @Singleton
-    fun provideGameRepository(impl: GameRepositoryImpl): GameRepository {
-        return impl
-    }
-
-    @Provides
-    @Singleton
-    fun provideGameRepositoryImpl(gameDao: GameDao): GameRepositoryImpl {
-        return GameRepositoryImpl(gameDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGameDao(playerDb: PlayerDb): GameDao {
-        return playerDb.GameDao()
-    }
-
-
-    //Logro Use Cases
-    @Provides
-    @Singleton
-    fun provideLogroDao(playerDb: PlayerDb): LogroDao {
-        return playerDb.LogroDao()
+    fun providePartidaRepositoryImpl(partidaDao: GameDao): GameRepositoryImpl {
+        return GameRepositoryImpl(partidaDao)
     }
 
     @Provides
     @Singleton
     fun provideLogroRepositoryImpl(logroDao: LogroDao): LogroRepositoryImpl {
         return LogroRepositoryImpl(logroDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providePartidaRepository(impl: GameRepositoryImpl): GameRepository {
+        return impl
     }
 
     @Provides
