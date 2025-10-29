@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
+import com.example.registrojugadoresjohanreinosoap2.domain.model.Game
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -26,4 +27,7 @@ interface GameDao {
 
     @Query("SELECT * FROM partidas")
     suspend fun getAllGames(): List<GameEntity>
+
+    @Query("SELECT * FROM partidas WHERE esFinalizada = 0")
+    fun getPartidasEnCurso(): Flow<List<Game>>
 }
