@@ -1,4 +1,4 @@
-package com.example.registrojugadoresjohanreinosoap2.domain.usecase
+package com.example.registrojugadoresjohanreinosoap2.domain.usecase.playerUseCase
 
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.PlayerRepository
 import javax.inject.Inject
@@ -15,21 +15,18 @@ class ValidationPlayerUseCase @Inject constructor(
     suspend operator fun invoke(
         nombre: String,
         partida: Int?,
-        currentPlayerId: Int? = null
+        currentPlayerId: String? = null
     ): ValidationResult {
-
         val nombreError = when {
             nombre.isBlank() -> "El nombre es requerido"
             else -> {
-                val cleanedName = nombre.trim().normalize()
-                val existingPlayers = playerRepository.
-                getAllPlayers().filter { it.Nombres.trim().normalize()== cleanedName }
+                val existingPlayers = playerRepository.getPlayersByName(nombre)
                 val isDuplicate = if (currentPlayerId != null) {
                     existingPlayers.any { it.Jugadorid != currentPlayerId }
                 } else {
                     existingPlayers.isNotEmpty()
                 }
-                if (isDuplicate) "Ese nombre ya existe" else null
+                if (isDuplicate) "Nombre ya existe" else null
             }
         }
 
