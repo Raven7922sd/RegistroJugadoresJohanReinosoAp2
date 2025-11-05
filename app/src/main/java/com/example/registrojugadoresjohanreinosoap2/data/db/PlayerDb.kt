@@ -10,7 +10,7 @@ import com.example.registrojugadoresjohanreinosoap2.data.local.PlayerDao
 import com.example.registrojugadoresjohanreinosoap2.data.local.PlayerEntity
 
 @Database(entities = [PlayerEntity::class, GameEntity::class, LogroEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false)
 
 abstract class PlayerDb: RoomDatabase() {

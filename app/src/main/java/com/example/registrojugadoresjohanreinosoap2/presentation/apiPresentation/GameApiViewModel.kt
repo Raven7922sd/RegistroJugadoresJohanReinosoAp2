@@ -37,7 +37,7 @@ class GameApiViewModel @Inject constructor(
 
     private fun cargarJugadores() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, message = "Cargando jugadores") }
+            _state.update { it.copy(isLoading = true, message = "Cargando jugadores...") }
             try {
                 val jugadores = getJugadoresUseCase()
                 _state.update {
@@ -60,7 +60,7 @@ class GameApiViewModel @Inject constructor(
 
     fun cargarPartida(id: Int) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, message = "Cargando partida $id...") }
+            _state.update { it.copy(isLoading = true, message = "Cargando partida $id") }
             try {
                 val partida = getPartidaUseCase(id)
                 if (partida != null) {
@@ -73,8 +73,8 @@ class GameApiViewModel @Inject constructor(
                     val ganador = checkWinner(tablero)
                     val esEmpate = movimientos.size == 9 && ganador == null
 
-                    val jugador1 = state.value.jugadores.find { it.Jugadorid == partida.JugadorId1 }
-                    val jugador2 = state.value.jugadores.find { it.Jugadorid == partida.JugadorId2 }
+                    val jugador1 = state.value.jugadores.find { it.remoteId == partida.JugadorId1 }
+                    val jugador2 = state.value.jugadores.find { it.remoteId == partida.JugadorId2 }
 
                     _state.update { currentState ->
                         currentState.copy(
@@ -152,13 +152,13 @@ class GameApiViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, message = "Creando nueva partida...") }
+            _state.update { it.copy(isLoading = true, message = "Creando nueva partida") }
             try {
                 val partida = Game(
                     Gameid = 0,
                     Fecha = LocalDate.now().toString(),
-                    JugadorId1 = jugador1.Jugadorid,
-                    JugadorId2 = jugador2.Jugadorid,
+                    JugadorId1 = jugador1.remoteId ?: 0,
+                    JugadorId2 = jugador2.remoteId ?: 0,
                     GanadorId = null,
                     EsFinalizada = false,
                     tablero = "",

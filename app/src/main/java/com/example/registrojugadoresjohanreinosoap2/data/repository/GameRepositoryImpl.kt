@@ -36,4 +36,7 @@ class GameRepositoryImpl @Inject constructor(
         return gameDao.getAllGames().map { it.toDomain() }
     }
 
+    override fun getPartidasEnCurso(): Flow<List<Game>> {
+        return gameDao.getPartidasEnCurso()
+    }
 }

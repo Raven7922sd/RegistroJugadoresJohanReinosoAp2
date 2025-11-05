@@ -51,7 +51,6 @@ import com.example.registrojugadoresjohanreinosoap2.domain.model.Game
 fun GameListScreen(
     onNavigateToEdit: (Int) -> Unit,
     onNavigateToCreate: () -> Unit,
-    onOpenDrawer: () -> Unit,
     onNavigateToPlayers: () -> Unit,
     onNavigateToGame: () -> Unit,
     onContinueGame: (Int) -> Unit,

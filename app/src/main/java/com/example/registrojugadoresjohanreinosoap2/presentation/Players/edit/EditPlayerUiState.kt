@@ -1,4 +1,4 @@
-package com.example.registrojugadoresjohanreinosoap2.presentation.edit
+package com.example.registrojugadoresjohanreinosoap2.presentation.Players.edit
 
 data class EditPlayerUiState(
     val id: Int? = null,

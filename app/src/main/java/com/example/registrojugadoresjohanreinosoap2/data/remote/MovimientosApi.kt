@@ -1,6 +1,6 @@
-package com.example.registrojugadoresjohanreinosoap2.data.remoteApi;
+package com.example.registrojugadoresjohanreinosoap2.data.remote;
 
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.dto.MovimientoDto
+import com.example.registrojugadoresjohanreinosoap2.data.remote.dto.MovimientoDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

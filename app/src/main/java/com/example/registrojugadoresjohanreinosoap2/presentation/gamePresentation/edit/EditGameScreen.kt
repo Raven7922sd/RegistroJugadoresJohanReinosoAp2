@@ -58,8 +58,8 @@ private fun EditGameBody(
                 jugadores = state.jugadoresDisponibles,
                 onJugadorSelected = { jugador ->
                     when (selectorType) {
-                        "jugador1" -> onEvent(EditGameUiEvent.JugadorId1Changed(jugador.Jugadorid))
-                        "jugador2" -> onEvent(EditGameUiEvent.JugadorId2Changed(jugador.Jugadorid))
+                        "jugador1" -> onEvent(EditGameUiEvent.JugadorId1Changed(jugador.remoteId ?: 0))
+                        "jugador2" -> onEvent(EditGameUiEvent.JugadorId2Changed(jugador.remoteId ?: 0))
                     }
                     showJugadorSelector = false
                 }
@@ -82,7 +82,7 @@ private fun EditGameBody(
             ) {
                 Text(
                     text = if (state.jugadorId1 == 0) "Seleccionar Jugador 1"
-                    else "Jugador 1: ${state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId1 }?.Nombres ?: "ID ${state.jugadorId1}"}",
+                    else "Jugador 1: ${state.jugadoresDisponibles.find { it.remoteId == state.jugadorId1 }?.Nombres ?: "ID ${state.jugadorId1}"}",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -104,7 +104,7 @@ private fun EditGameBody(
             ) {
                 Text(
                     text = if (state.jugadorId2 == 0) "Seleccionar Jugador 2"
-                    else "Jugador 2: ${state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId2 }?.Nombres ?: "ID ${state.jugadorId2}"}",
+                    else "Jugador 2: ${state.jugadoresDisponibles.find { it.remoteId == state.jugadorId2 }?.Nombres ?: "ID ${state.jugadorId2}"}",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -134,8 +134,8 @@ private fun EditGameBody(
             Spacer(Modifier.height(16.dp))
 
             if (state.jugadorId1 > 0 && state.jugadorId2 > 0) {
-                val jugador1 = state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId1 }
-                val jugador2 = state.jugadoresDisponibles.find { it.Jugadorid == state.jugadorId2 }
+                val jugador1 = state.jugadoresDisponibles.find { it.remoteId == state.jugadorId1 }
+                val jugador2 = state.jugadoresDisponibles.find { it.remoteId == state.jugadorId2 }
 
                 Text("Ganador:", style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(8.dp))

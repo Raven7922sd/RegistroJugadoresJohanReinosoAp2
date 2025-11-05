@@ -1,5 +1,6 @@
 package com.example.registrojugadoresjohanreinosoap2.presentation.Players.edit
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -16,25 +17,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditPlayerScreen(
-    playerId: Int?,
-    navController: NavController,
-    viewModel: EditPlayerViewModel = hiltViewModel()
+    playerId: String?,viewModel: EditPlayerViewModel = hiltViewModel()
 ) {
     LaunchedEffect(playerId) {
         viewModel.onEvent(EditPlayerUiEvent.Load(playerId))
     }
-
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    LaunchedEffect(state.isSaving) {
-        if (state.isSaving) {
-            navController.popBackStack()
-        }
-    }
-
     EditPlayerBody(state, viewModel::onEvent)
 }
 
@@ -49,13 +39,13 @@ private fun EditPlayerBody(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Datos de jugador",
+                        text = if (state.isNew) "Nuevo Jugador" else "Editar Jugador",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF7E57C2)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         }
@@ -63,67 +53,167 @@ private fun EditPlayerBody(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+                .fillMaxSize()
         ) {
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = { onEvent(EditPlayerUiEvent.NameChanged(it)) },
-                label = { Text("Nombre") },
-                isError = state.nameError != null,
-                modifier = Modifier.fillMaxWidth()
-            )
-            if (state.nameError != null) {
-                Text(
-                    state.nameError,
-                    color = MaterialTheme.colorScheme.error
-                )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Información del Jugador",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = state.name,
+                        onValueChange = { onEvent(EditPlayerUiEvent.NameChanged(it)) },
+                        label = { Text("Nombre") },
+                        isError = state.nameError != null,
+                        supportingText = {
+                            if (state.nameError != null) {
+                                Text(
+                                    text = state.nameError,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = state.gamesPlayed?.toString() ?: "",
+                        onValueChange = { onEvent(EditPlayerUiEvent.PartidaChanged(it)) },
+                        label = { Text("Partidas Jugadas") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        isError = state.gamesPlayedError != null,
+                        supportingText = {
+                            if (state.gamesPlayedError != null) {
+                                Text(
+                                    text = state.gamesPlayedError,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.weight(1f))
 
-            OutlinedTextField(
-                value = state.gamesPlayed?.toString() ?: "",
-                onValueChange = { onEvent(EditPlayerUiEvent.PartidaChanged(it)) },
-                label = { Text("Partida") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = state.gamesPlayedError != null,
+            Column(
                 modifier = Modifier.fillMaxWidth()
-            )
-            if (state.gamesPlayedError != null) {
-                Text(
-                    state.gamesPlayedError,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Row {
+            ) {
                 Button(
                     onClick = { onEvent(EditPlayerUiEvent.Save) },
-                    enabled = !state.isSaving,
-                    modifier = Modifier.fillMaxWidth()
+                    enabled = !state.isSaving && !state.isDeleting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
                 ) {
-                    Text("Guardar")
+                    if (state.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = if (state.isSaving) "Guardando" else "Guardar",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
-                Spacer(Modifier.fillMaxWidth())
+
                 if (!state.isNew) {
+                    Spacer(Modifier.height(12.dp))
+
                     OutlinedButton(
                         onClick = { onEvent(EditPlayerUiEvent.Delete) },
-                        enabled = !state.isDeleting
+                        enabled = !state.isDeleting && !state.isSaving,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (state.isDeleting || state.isSaving)
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            else
+                                MaterialTheme.colorScheme.error
+                        )
                     ) {
-                        Text("Eliminar")
+                        if (state.isDeleting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.error,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = if (state.isDeleting) "Eliminando" else "Eliminar Jugador",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-private fun EditPlayerBodyPreview() {
-    val state = EditPlayerUiState()
+private fun EditPlayerBodyNewPreview() {
+    val state = EditPlayerUiState(
+        isNew = true,
+        name = "",
+        gamesPlayed = null
+    )
+    MaterialTheme {
+        EditPlayerBody(state = state) {}
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun EditPlayerBodyEditPreview() {
+    val state = EditPlayerUiState(
+        isNew = false,
+        name = "Alberto",
+        gamesPlayed = 15
+    )
+    MaterialTheme {
+        EditPlayerBody(state = state) {}
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun EditPlayerBodyWithErrorsPreview() {
+    val state = EditPlayerUiState(
+        isNew = false,
+        name = "",
+        gamesPlayed = null,
+        nameError = "El nombre es requerido",
+        gamesPlayedError = "Debe ingresar un número válido"
+    )
     MaterialTheme {
         EditPlayerBody(state = state) {}
     }

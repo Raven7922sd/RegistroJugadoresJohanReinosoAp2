@@ -3,8 +3,6 @@ package com.example.registrojugadoresjohanreinosoap2.presentation.gamePresentati
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.registrojugadoresjohanreinosoap2.domain.model.Game
-import com.example.registrojugadoresjohanreinosoap2.domain.model.Jugadores
-import com.example.registrojugadoresjohanreinosoap2.domain.model.Player // Asegúrate de que esta importación exista si la necesitas para 'jugadores'
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.PlayerRepository
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.DeleteGameUseCase
 import com.example.registrojugadoresjohanreinosoap2.domain.usecase.gameUseCase.GetAllPlayersUseCase
@@ -79,7 +77,8 @@ class EditGameViewModel @Inject constructor(
 
     private fun onJugador1Changed(jugadorId: Int){
         viewModelScope.launch {
-            val jugador = playerRepository.getPlayer(jugadorId)
+            val jugadores = playerRepository.getAllPlayers()
+            val jugador = jugadores.find { it.remoteId == jugadorId }
             _state.update {
                 it.copy(
                     jugadorId1 = jugadorId,
@@ -91,7 +90,8 @@ class EditGameViewModel @Inject constructor(
 
     private fun onJugador2Changed(jugadorId: Int){
         viewModelScope.launch {
-            val jugador = playerRepository.getPlayer(jugadorId)
+            val jugadores = playerRepository.getAllPlayers()
+            val jugador = jugadores.find { it.remoteId == jugadorId }
             _state.update {
                 it.copy(
                     jugadorId2 = jugadorId,

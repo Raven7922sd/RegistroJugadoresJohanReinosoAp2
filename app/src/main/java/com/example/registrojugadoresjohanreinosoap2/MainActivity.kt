@@ -3,20 +3,20 @@ package com.example.registrojugadoresjohanreinosoap2
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +49,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import edu.ucne.registrojugadores.Presentation.Logros.Edit.EditLogroScreen
 import edu.ucne.registrojugadores.Presentation.Logros.List.ListLogroScreen
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.ui.text.style.TextAlign
+import androidx.core.view.WindowCompat
+import androidx.navigation.NavController
 
 
 @AndroidEntryPoint
@@ -56,7 +62,9 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             RegistroJugadoresJohanReinosoAp2Theme {
                 val navController = rememberNavController()
@@ -75,22 +83,13 @@ class MainActivity : ComponentActivity() {
                             LazyColumn {
                                 item {
                                     DrawerMenuItem(
-                                        icon = Icons.Filled.PlayArrow,
-                                        title = "Tic-Tac-Toe",
-                                        isSelected = navController.currentDestination?.route == "tictactoeGame",
-                                        onClick = {
-                                            navController.navigate("tictactoeGame")
-                                            scope.launch { drawerState.close() }
-                                        }
-                                    )
-                                }
-                                item {
-                                    DrawerMenuItem(
                                         icon = Icons.Filled.Person,
-                                        title = "Registro de Jugadores",
+                                        title = "Jugadores",
                                         isSelected = navController.currentDestination?.route == "playerList",
                                         onClick = {
-                                            navController.navigate("playerList")
+                                            navController.navigate("playerList") {
+                                                popUpTo("playerList") { inclusive = true }
+                                            }
                                             scope.launch { drawerState.close() }
                                         }
                                     )
@@ -98,10 +97,10 @@ class MainActivity : ComponentActivity() {
                                 item {
                                     DrawerMenuItem(
                                         icon = Icons.Filled.PlayArrow,
-                                        title = "Registro de Partidas",
-                                        isSelected = navController.currentDestination?.route == "gameList",
+                                        title = "Partidas",
+                                        isSelected = navController.currentDestination?.route == "partidaList",
                                         onClick = {
-                                            navController.navigate("gameList")
+                                            navController.navigate("partidaList")
                                             scope.launch { drawerState.close() }
                                         }
                                     )
@@ -132,159 +131,146 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) {
-                    Scaffold(
-                        topBar = {
-                            CustomTopAppBar(
-                                onMenuClick = {
-                                    scope.launch { drawerState.open() }
-                                }
-                            )
-                        },
-                        containerColor = Color(0xFFF8F9FA)
-                    ) { paddingValues ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color(0xFFF8F9FA),
-                                            Color(0xFFE9ECEF)
-                                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color(0xFFF8F9FA),
+                                        Color(0xFFE9ECEF)
                                     )
                                 )
+                            )
+                    ) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = "playerList",
+                            modifier = Modifier.fillMaxSize(),
+                            enterTransition = { slideInHorizontally(initialOffsetX = { 300 }) },
+                            exitTransition = { slideOutHorizontally(targetOffsetX = { -300 }) }
                         ) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = "tictactoeGame",
-                                modifier = Modifier.fillMaxSize(),
-                                enterTransition = { slideInHorizontally(initialOffsetX = { 300 }) },
-                                exitTransition = { slideOutHorizontally(targetOffsetX = { -300 }) }
+                            composable("playerList") {
+                                PlayerListScreen(
+                                    onNavigateToEdit = { id ->
+                                        navController.navigate("editPlayer/$id")
+                                    },
+                                    onNavigateToCreate = {
+                                        navController.navigate("editPlayer/0")
+                                    },
+                                    onOpenDrawer = {
+                                        scope.launch { drawerState.open() }
+                                    }
+                                )
+                            }
+
+                            composable("editPlayer/{id}") { backStackEntry ->
+                                val id = backStackEntry.arguments?.getString("id")
+                                EditPlayerScreen(playerId = id)
+                            }
+
+                            composable("partidaList") {
+                                GameListScreen(
+                                    onNavigateToEdit = { id ->
+                                        navController.navigate("editPartida/$id")
+                                    },
+                                    onNavigateToCreate = {
+                                        navController.navigate("editPartida/0")
+                                    },
+                                    onNavigateToPlayers = {
+                                        navController.navigate("playerList")
+                                    },
+                                    onNavigateToGame = {
+                                        navController.navigate("gameScreen")
+                                    },
+                                    onContinueGame = { partidaId ->
+                                        navController.navigate("gameScreen/$partidaId")
+                                    }
+                                )
+                            }
+
+                            composable(
+                                route = "editPartida/{id}",
+                                arguments = listOf(navArgument("id") { type = NavType.IntType; defaultValue = 0 })
+                            ) { backStackEntry ->
+                                val id = backStackEntry.arguments?.getInt("id")
+                                EditGameScreen(
+                                    gameId = id,
+                                    navController = navController,
+                                    viewModel = hiltViewModel()
+                                )
+                            }
+
+                            composable(
+                                route = "gameScreen",
                             ) {
-                                composable("playerList") {
-                                    PlayerListScreen(
-                                        onNavigateToEdit = { id ->
-                                            navController.navigate("editPlayer/$id")
-                                        },
-                                        onNavigateToCreate = {
-                                            navController.navigate("editPlayer/0")
-                                        },
-                                        onOpenDrawer = {
-                                            scope.launch { drawerState.open() }
-                                        }
-                                    )
-                                }
+                                GameScreen(
+                                    partidaId = null,
+                                    viewModel = hiltViewModel()
+                                )
+                            }
 
-                                composable("editPlayer/{id}") { backStackEntry ->
-                                    val id = backStackEntry.arguments?.getString("id")?.toIntOrNull()
-                                    EditPlayerScreen(
-                                        playerId = id,
-                                        navController = navController,
-                                        viewModel = hiltViewModel()
-                                    )
-                                }
+                            composable(
+                                route = "gameScreen/{partidaId}",
+                                arguments = listOf(navArgument("partidaId") { type = NavType.IntType })
+                            ) { backStackEntry ->
+                                val partidaId = backStackEntry.arguments?.getInt("partidaId")
+                                GameScreen(
+                                    partidaId = partidaId,
+                                    viewModel = hiltViewModel()
+                                )
+                            }
 
-                                composable("gameList") {
-                                    GameListScreen(
-                                        onNavigateToEdit = { id ->
-                                            navController.navigate("editGame/$id")
-                                        },
-                                        onNavigateToCreate = {
-                                            navController.navigate("editGame/0")
-                                        },
-                                        onNavigateToPlayers = {
-                                            navController.navigate("playerList")
-                                        },
-                                        onNavigateToGame = {
-                                            navController.navigate("tictactoeGame")
-                                        },
-                                        onContinueGame = { gameId ->
-                                            navController.navigate("localGameScreen/$gameId")
-                                        },
-                                        onOpenDrawer = {
-                                            scope.launch { drawerState.open() }
-                                        }
-                                    )
-                                }
+                            composable("logroList") {
+                                ListLogroScreen(
+                                    onNavigateToEdit = { logroId ->
+                                        navController.navigate("editLogro/$logroId")
+                                    },
+                                    onNavigateToCreate = {
+                                        navController.navigate("editLogro/0")
+                                    }
+                                )
+                            }
 
-                                composable("tictactoeGame") {
-                                    GameScreen(
-                                        viewModel = hiltViewModel()
-                                    )
-                                }
+                            composable(
+                                route = "editLogro/{logroId}",
+                                arguments = listOf(navArgument("logroId") { type = NavType.IntType; defaultValue = 0 })
+                            ) { backStackEntry ->
+                                val logroId = backStackEntry.arguments?.getInt("logroId")
+                                EditLogroScreen(
+                                    logroId = logroId,
+                                    onSaveComplete = { navController.popBackStack() },
+                                    onDeleteComplete = { navController.popBackStack() }
+                                )
+                            }
 
-                                composable("editGame/{id}") { backStackEntry ->
-                                    val id = backStackEntry.arguments?.getString("id")
-                                    EditGameScreen(
-                                        gameId = id?.toIntOrNull(),
-                                        navController = navController,
-                                        viewModel = hiltViewModel()
-                                    )
-                                }
+                            composable("apiPartidaList") {
+                                ListPartidaApiScreen(
+                                    onNavigateToCreate = {
+                                        navController.navigate("apiGameScreen")
+                                    },
+                                    onNavigateToGame = { partidaId ->
+                                        navController.navigate("apiGameScreen/$partidaId")
+                                    }
+                                )
+                            }
 
-                                composable(
-                                    route = "localGameScreen/{gameId}",
-                                    arguments = listOf(navArgument("gameId") {
-                                        type = NavType.IntType
-                                    })
-                                ) { backStackEntry ->
-                                    val gameId = backStackEntry.arguments?.getInt("gameId")
-                                    GameScreen(
-                                        viewModel = hiltViewModel()
-                                    )
-                                }
+                            composable("apiGameScreen") {
+                                ApiGameScreen(
+                                    partidaId = null,
+                                    onNavigateBack = { navController.popBackStack() }
+                                )
+                            }
 
-                                composable("logroList") {
-                                    ListLogroScreen(
-                                        onNavigateToEdit = { logroId ->
-                                            navController.navigate("editLogro/$logroId")
-                                        },
-                                        onNavigateToCreate = {
-                                            navController.navigate("editLogro/0")
-                                        }
-                                    )
-                                }
-
-                                composable("editLogro/{logroId}") { backStackEntry ->
-                                    val logroId = backStackEntry.arguments?.getString("logroId")?.toIntOrNull()
-                                    EditLogroScreen(
-                                        logroId = logroId,
-                                        onSaveComplete = { navController.popBackStack() },
-                                        onDeleteComplete = { navController.popBackStack() }
-                                    )
-                                }
-
-                                composable("apiPartidaList") {
-                                    ListPartidaApiScreen(
-                                        onNavigateToCreate = {
-                                            navController.navigate("apiGameScreen")
-                                        },
-                                        onNavigateToGame = { partidaId ->
-                                            navController.navigate("apiGameScreen/$partidaId")
-                                        }
-                                    )
-                                }
-
-                                composable("apiGameScreen") {
-                                    ApiGameScreen(
-                                        partidaId = null,
-                                        onNavigateBack = { navController.popBackStack() }
-                                    )
-                                }
-
-                                composable(
-                                    route = "apiGameScreen/{partidaId}",
-                                    arguments = listOf(navArgument("partidaId") {
-                                        type = NavType.IntType
-                                    })
-                                ) { backStackEntry ->
-                                    val partidaId = backStackEntry.arguments?.getInt("partidaId")
-                                    ApiGameScreen(
-                                        partidaId = partidaId,
-                                        onNavigateBack = { navController.popBackStack() }
-                                    )
-                                }
+                            composable(
+                                route = "apiGameScreen/{partidaId}",
+                                arguments = listOf(navArgument("partidaId") { type = NavType.IntType })
+                            ) { backStackEntry ->
+                                val partidaId = backStackEntry.arguments?.getInt("partidaId")
+                                ApiGameScreen(
+                                    partidaId = partidaId,
+                                    onNavigateBack = { navController.popBackStack() }
+                                )
                             }
                         }
                     }
@@ -299,7 +285,7 @@ private fun DrawerHeader() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(140.dp)
             .background(
                 brush = Brush.horizontalGradient(
                     colors = listOf(
@@ -312,9 +298,15 @@ private fun DrawerHeader() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.Center
         ) {
+            Icon(
+                imageVector = Icons.Filled.SportsEsports,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(40.dp)
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Menú Principal",
@@ -324,8 +316,8 @@ private fun DrawerHeader() {
             )
             Text(
                 text = "Gestión de opciones",
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.bodySmall
+                color = Color.White.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyMedium
             )
         }
     }
@@ -360,49 +352,6 @@ private fun DrawerMenuItem(
             selectedContainerColor = Color(0xFF7E57C2).copy(alpha = 0.1f),
             unselectedContainerColor = Color.Transparent
         ),
-        shape = RoundedCornerShape(12.dp),
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CustomTopAppBar(
-    onMenuClick: () -> Unit
-) {
-    TopAppBar(
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Tic-Tac-Toe App",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            }
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = onMenuClick,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.1f))
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "Menú",
-                    tint = Color.White
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF7E57C2)
-        ),
-        modifier = Modifier.shadow(
-            elevation = 8.dp,
-            shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
-        )
+        shape = RoundedCornerShape(12.dp)
     )
 }

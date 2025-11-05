@@ -1,8 +1,8 @@
 package com.example.registrojugadoresjohanreinosoap2.data.repository.apiRepository
 
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.Mapper.toDomain
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.Mapper.toDto
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.PartidaApi
+import com.example.registrojugadoresjohanreinosoap2.data.remote.Mapper.toDomain
+import com.example.registrojugadoresjohanreinosoap2.data.remote.Mapper.toDto
+import com.example.registrojugadoresjohanreinosoap2.data.remote.PartidaApi
 import com.example.registrojugadoresjohanreinosoap2.domain.model.Game
 import com.example.registrojugadoresjohanreinosoap2.domain.repository.ApiRepository.PartidaApiRepository
 import javax.inject.Inject

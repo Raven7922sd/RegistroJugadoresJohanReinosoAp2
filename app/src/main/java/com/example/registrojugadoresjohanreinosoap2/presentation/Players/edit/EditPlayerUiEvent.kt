@@ -1,7 +1,7 @@
-package com.example.registrojugadoresjohanreinosoap2.presentation.edit
+package com.example.registrojugadoresjohanreinosoap2.presentation.Players.edit
 
 sealed interface EditPlayerUiEvent {
-    data class Load(val id: Int?) : EditPlayerUiEvent
+    data class Load(val id: String?) : EditPlayerUiEvent
     data class NameChanged(val value: String) : EditPlayerUiEvent
 
     data class PartidaChanged(val value: String) : EditPlayerUiEvent

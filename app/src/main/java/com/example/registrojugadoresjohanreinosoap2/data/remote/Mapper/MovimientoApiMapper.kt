@@ -1,6 +1,6 @@
-package com.example.registrojugadoresjohanreinosoap2.data.remoteApi.Mapper
+package com.example.registrojugadoresjohanreinosoap2.data.remote.Mapper
 
-import com.example.registrojugadoresjohanreinosoap2.data.remoteApi.dto.MovimientoDto
+import com.example.registrojugadoresjohanreinosoap2.data.remote.dto.MovimientoDto
 import com.example.registrojugadoresjohanreinosoap2.domain.model.Movimiento.Movimientos
 
 fun MovimientoDto.toDomain(partidaId: Int): Movimientos = Movimientos(

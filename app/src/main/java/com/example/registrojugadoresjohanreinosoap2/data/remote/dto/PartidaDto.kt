@@ -1,4 +1,4 @@
-package com.example.registrojugadoresjohanreinosoap2.data.remoteApi.dto
+package com.example.registrojugadoresjohanreinosoap2.data.remote.dto
 
 data class PartidaDto(
     val partidaId: Int? = null,

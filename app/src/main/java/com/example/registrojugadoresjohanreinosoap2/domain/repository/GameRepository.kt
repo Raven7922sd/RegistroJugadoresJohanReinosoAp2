@@ -9,10 +9,11 @@ interface GameRepository {
 
     suspend fun getGame(id:Int): Game?
 
+    fun getPartidasEnCurso(): Flow<List<Game>>
+
     suspend fun getAllGames(): List<Game>
 
     suspend fun upsert(game: Game):Int
 
     suspend fun delete(id:Int)
-
 }

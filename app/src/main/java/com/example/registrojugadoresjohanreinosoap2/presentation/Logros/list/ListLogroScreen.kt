@@ -47,12 +47,24 @@ fun ListLogroScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ListLogroBody(
     state: ListLogroUiState,
     onEvent: (ListLogroUiEvent) -> Unit
 ) {
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Lista de logros",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { onEvent(ListLogroUiEvent.CreateNew) }) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar logro")
